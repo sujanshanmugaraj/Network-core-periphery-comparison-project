@@ -330,7 +330,8 @@ $\mathcal{P}_v=\{(v,w):w\notin N(v)\cup\{v\}\}\cup\{(x,y):x,y\in N(v),\,xy\notin
 of its non-neighbours and for each non-adjacent pair of its
 neighbours~\cite{even1975algorithm,esfahanian2013connectivity}.
 
-\textbf{Certificates.} Most pairs are certified without a max-flow computation:
+\textbf{Certificates.} Most pairs ($92\%$ in our networks, Section~\ref{sec:results}) are certified
+without a max-flow computation:
 \begin{lemma}\label{lem:cert}
 Let $T_x$ be the smallest set that contains $x$ and $N(x)$, contains every node verified by max-flow
 to satisfy $\kappa(x,\cdot)\ge k$, and contains every node with at least $k$ neighbours in $T_x$
@@ -637,7 +638,14 @@ core$+$brokerage hybrid.}
 \end{figure*}
 
 \subsection{Computation}
-%COMPUTATION%
+Table~\ref{tab:bench} compares our exact algorithm with NetworkX on the same machine (one process,
+after a warm-up run that excludes Numba's one-off compilation). Our algorithm computes the full
+$k$-component hierarchy of every network in at most $84$\,s (Facebook, $k_{\max}=115$), and of the
+power grid and \emph{C.~elegans} in under $0.25$\,s; NetworkX finishes only the two smallest networks
+within the $10$-minute limit, and on Air India it returns four non-maximal components at three levels
+of the hierarchy. The certificates of Lemma~\ref{lem:cert} are what make this possible: across all
+networks, $92\%$ of the node pairs examined by the connectivity test ($62$--$96\%$ per network) are
+certified without any max-flow computation.
 
 \begin{table}[t]
 \centering
@@ -684,8 +692,8 @@ next step. (iv) For tractability, Rombach's method used a $6\times9$ grid instea
 was optimised greedily from 20 random visiting orders, so both fits may be slightly sub-optimal and the
 corresponding results are conservative for these methods. (v) Our null model preserves degrees but not clustering; a clustering-preserving null
 model would test whether the group-level gap exceeds what triangles alone imply. (vi) Exact cohesion
-remains costly: networks of a few thousand nodes take seconds to minutes, but very large networks would
-require approximation or parallelisation.
+remains costly: networks of a few thousand nodes take up to a minute and a half, but very large
+networks would require approximation or parallelisation.
 
 \section{Conclusion}
 Core--periphery cores and structural-cohesion cores agree on who is central but not on how the centre is

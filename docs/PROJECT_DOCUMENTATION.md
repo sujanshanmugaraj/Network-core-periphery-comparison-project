@@ -391,6 +391,23 @@ only the full hierarchy reaches the best R.
 * Core + brokerage: training always selects λ* = 0 (pure brokerage).
 * → **H3 not supported**; the held-out design prevented an overfitted "hybrid wins" claim.
 
+### Computation — exact algorithm vs networkx (Table VIII)
+Same machine, one process each, Numba compilation excluded by a warm-up run, 10-minute limit:
+
+| Network | Ours | networkx `k_components` |
+|---|---|---|
+| Karate | 0.003 s | 0.18 s |
+| Air India | 0.020 s | 0.66 s — **4 non-maximal sets at 3 levels** |
+| Power grid | 0.113 s | did not finish in 10 min |
+| C. elegans | 0.198 s | did not finish in 10 min |
+| Email-EU | 4.3 s | did not finish in 10 min |
+| Yeast | 4.5 s | did not finish in 10 min |
+| GrQc | 30.2 s | did not finish in 10 min |
+| Facebook | 83.4 s | did not finish in 10 min |
+
+92 % of the node pairs examined by the connectivity test are certified without max-flow
+(62–96 % per network) — this is what makes the exact computation fast.
+
 ### Tie-breaking sensitivity
 With uniformly random tie-breaking every coarse score gets worse and brokerage collapses (86–100 % of
 nodes have b = 0). Brokerage is a **prioritisation layer** on top of a base ranking, not a full ranking.

@@ -189,7 +189,10 @@ def tab_bench():
         tn = "$>$\\num{600}" if pd.isna(r.t_networkx_s) else f"{r.t_networkx_s:.1f}"
         dl = "--" if pd.isna(r.get("levels_differ", np.nan)) else f"{int(r.levels_differ)}"
         nm = "--" if pd.isna(r.get("nx_nonmaximal_sets", np.nan)) else f"{int(r.nx_nonmaximal_sets)}"
-        s.append(f"{SHORT[k]} & {r.t_ours_s:.2f} & {tn} & {dl} & {nm}\\\\")
+        to = f"{r.t_ours_s:.3f}" if r.t_ours_s < 1 else f"{r.t_ours_s:.1f}"
+        if not pd.isna(r.t_networkx_s):
+            tn = f"{r.t_networkx_s:.2f}"
+        s.append(f"{SHORT[k]} & {to} & {tn} & {dl} & {nm}\\\\")
     s += ["\\bottomrule", "\\end{tabular}"]
     write("tab_bench", "\n".join(s))
 
