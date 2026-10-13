@@ -1,0 +1,11 @@
+﻿__pycache__/
+*.pyc
+.pytest_cache/
+data/raw/
+results/cache/
+results/log_*.txt
+paper/*.aux
+paper/*.log
+paper/*.bbl
+paper/*.blg
+paper/*.out
