@@ -46,6 +46,55 @@ def test_bowtie():
     assert nx.node_connectivity(G) == 1
 
 
+@pytest.mark.parametrize("seed", range(10))
+def test_flow_matches_networkx(seed):
+    import random
+
+    from src.cohesion import _Flow
+
+    G = nx.gnm_random_graph(40, 160, seed=seed)
+    G = G.subgraph(max(nx.connected_components(G), key=len)).copy()
+    F = _Flow(G)
+    rnd = random.Random(seed)
+    nodes = list(G)
+    for _ in range(30):
+        s, t = rnd.sample(nodes, 2)
+        if G.has_edge(s, t):
+            continue
+        kap = nx.connectivity.local_node_connectivity(G, s, t)
+        for k in (1, kap, kap + 1):
+            assert F.kappa_at_least(s, t, k) == (kap >= k)
+        cut = F.cut(s, t)
+        assert len(cut) == kap
+        H = G.copy()
+        H.remove_nodes_from(cut)
+        assert not nx.has_path(H, s, t)
+
+
+def test_bowtie_group_structure_and_broker():
+    from src.cohesion import broker_scores, group_structure, group_summary
+    from src.datasets import clean_graph
+
+    G = clean_graph(bowtie().edges())
+    lab = nx.get_node_attributes(G, "label")
+    kc = k_components_exact(G)
+    B = broker_scores(G.number_of_nodes(), kc)
+    assert {lab[v]: B[v] for v in G} == {"A": 0, "B": 0, "X": 1, "C": 0, "D": 0}
+    rows = group_structure(G, kc)
+    assert rows == [{"k": 2, "core_size": 5, "n_cc": 1, "n_kcomp": 2, "coverage": 1.0,
+                     "group_jaccard": 3 / 5}]
+    assert group_summary(rows)["fragmentation"] == 2.0
+
+
+def test_random_graph_kcore_is_cohesive():
+    # Łuczak (1991): k-cores of random graphs are k-connected w.h.p.
+    G = nx.gnm_random_graph(400, 1600, seed=7)
+    G = G.subgraph(max(nx.connected_components(G), key=len)).copy()
+    lvl = cohesion_levels(G)
+    cn = nx.core_number(G)
+    assert sum(cn[v] > lvl[v] for v in G) <= 2
+
+
 @pytest.mark.parametrize("seed", range(25))
 def test_against_brute_force(seed):
     G = nx.gnp_random_graph(9, 0.55, seed=seed)

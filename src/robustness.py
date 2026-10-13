@@ -77,6 +77,32 @@ def robustness_curve_naive(G: nx.Graph, order):
     return np.array(S), sum(S) / n
 
 
+@njit(cache=True)
+def _adaptive_degree_order(indptr, indices):
+    n = indptr.size - 1
+    deg = np.diff(indptr).copy()
+    alive = np.ones(n, dtype=np.bool_)
+    order = np.empty(n, dtype=np.int64)
+    for step in range(n):
+        best, bd = -1, -1
+        for v in range(n):
+            if alive[v] and deg[v] > bd:
+                best, bd = v, deg[v]
+        order[step] = best
+        alive[best] = False
+        for j in range(indptr[best], indptr[best + 1]):
+            u = indices[j]
+            if alive[u]:
+                deg[u] -= 1
+    return order
+
+
+def adaptive_degree_order(G: nx.Graph, csr=None):
+    """Remove the currently highest-degree node, recompute degrees, repeat (ties: lowest id)."""
+    indptr, indices = csr if csr is not None else to_csr(G)
+    return _adaptive_degree_order(indptr, indices)
+
+
 # ------------------------------------------------------------------ orderings
 def order_by(scores, tiebreak, rng=None):
     """Highest score first.  Ties broken by ``tiebreak`` (higher first); if ``rng`` is
