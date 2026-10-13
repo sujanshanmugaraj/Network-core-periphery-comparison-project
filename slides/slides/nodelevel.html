@@ -1,0 +1,20 @@
+<section id="nodelevel" data-transition="fade" style="background:#FBFBF8;color:#14213D;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:56px">
+<h2 style="font-family:'Source Serif 4', Georgia, serif;font-size:64px;font-weight:600;line-height:1.1">RQ1 · Node by node, the two cores are the same ranking</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:32px">
+<div style="background:#FFFFFF;padding:44px;border:1px solid #DCE3EE;border-top:8px solid #2A78D6;border-radius:16px;display:flex;flex-direction:column;gap:12px">
+<p style="font-family:'Source Serif 4', Georgia, serif;font-size:96px;font-weight:600;line-height:1">≥ 0.99</p>
+<p style="font-size:30px;line-height:1.4;color:#4A5568">Spearman ρ between k-coreness and cohesion level, in all 8 networks</p>
+</div>
+<div style="background:#FFFFFF;padding:44px;border:1px solid #DCE3EE;border-top:8px solid #2A78D6;border-radius:16px;display:flex;flex-direction:column;gap:12px">
+<p style="font-family:'Source Serif 4', Georgia, serif;font-size:96px;font-weight:600;line-height:1">≤ 1%</p>
+<p style="font-size:30px;line-height:1.4;color:#4A5568">cohesion deficit; 87% of “gap” nodes lose only one level</p>
+</div>
+<div style="background:#FFFFFF;padding:44px;border:1px solid #DCE3EE;border-top:8px solid #EB6834;border-radius:16px;display:flex;flex-direction:column;gap:12px">
+<p style="font-family:'Source Serif 4', Georgia, serif;font-size:96px;font-weight:600;line-height:1">0.24–0.54</p>
+<p style="font-size:30px;line-height:1.4;color:#4A5568">Spearman ρ of Borgatti–Everett labels with cohesion; Rombach 0.73–0.99</p>
+</div>
+</div>
+<p style="font-size:36px;line-height:1.4;color:#14213D">Main k-core = deepest k-components in every network (AMI = 1). CP models agree least on infrastructure — but for k-cores, <b>H1 is not supported</b>.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6B7486">6 / 12 · Gap nodes: coreness &gt; cohesion level, 0–15.7% of nodes (largest: Facebook)</p>
+<aside>First result. The inequality cohesion ≤ coreness always holds, and in real networks it is almost always tight. k-coreness and cohesion level rank nodes practically identically, so if all you need is a node ranking, the cheap k-core is an excellent proxy. Borgatti–Everett is a different animal: its binary labels correlate only weakly with cohesion. Rombach sits in between, and is weakest on the power grid. Our hypothesis H1 said agreement would be lower in spatial networks; that holds for the CP models but not for the k-core.</aside>
+</section>

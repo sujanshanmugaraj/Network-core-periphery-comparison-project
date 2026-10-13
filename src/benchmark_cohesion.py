@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import multiprocessing as mp
+import queue
 import time
 
 import networkx as nx
@@ -22,6 +23,10 @@ from .pipeline import TAB
 
 def _run(name, which, q):
     G = load_graph(name)
+    if which == "ours":
+        # warm-up: exclude Numba's one-off JIT compilation from the measured time
+        # (Les Miserables exercises every compiled routine, including max-flow and cut extraction)
+        k_components_exact(nx.convert_node_labels_to_integers(nx.Graph(nx.les_miserables_graph().edges())))
     t = time.time()
     if which == "ours":
         kc = k_components_exact(G)
@@ -36,12 +41,16 @@ def timed(name, which, timeout):
     q = mp.Queue()
     p = mp.Process(target=_run, args=(name, which, q))
     p.start()
-    p.join(timeout)
+    # Read the result BEFORE joining: a child that puts a large object on the queue cannot exit
+    # until the parent drains the pipe (joining first would deadlock on large outputs).
+    try:
+        out = q.get(timeout=timeout)
+    except queue.Empty:
+        out = (None, None)
     if p.is_alive():
         p.terminate()
-        p.join()
-        return None, None
-    return q.get()
+    p.join()
+    return out
 
 
 def compare(G, ours, ref):

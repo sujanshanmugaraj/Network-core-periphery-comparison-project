@@ -1,0 +1,29 @@
+<section id="algorithm" data-transition="fade" style="background:#FBFBF8;color:#14213D;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:48px">
+<h2 style="font-family:'Source Serif 4', Georgia, serif;font-size:64px;font-weight:600;line-height:1.1">An exact, fast k-component algorithm</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:32px">
+<div style="background:#FFFFFF;padding:40px;border:1px solid #DCE3EE;border-radius:16px;display:flex;flex-direction:column;gap:16px">
+<p style="font-size:28px;font-weight:600;color:#B4471B">1 · Split safely</p>
+<p style="font-size:30px;line-height:1.4;color:#4A5568">Prune to the k-core, find any vertex cut of size &lt; k, recurse on each side plus the cut. No k-component can be lost.</p>
+</div>
+<div style="background:#FFFFFF;padding:40px;border:1px solid #DCE3EE;border-radius:16px;display:flex;flex-direction:column;gap:16px">
+<p style="font-size:28px;font-weight:600;color:#B4471B">2 · Certify cheaply</p>
+<p style="font-size:30px;line-height:1.4;color:#4A5568">k common neighbours, or a “bootstrap closure” from a node, prove k disjoint paths without max-flow (Lemma 1).</p>
+</div>
+<div style="background:#FFFFFF;padding:40px;border:1px solid #DCE3EE;border-radius:16px;display:flex;flex-direction:column;gap:16px">
+<p style="font-size:28px;font-weight:600;color:#B4471B">3 · Flow the rest</p>
+<p style="font-size:30px;line-height:1.4;color:#4A5568">Remaining pairs: unit-capacity max-flow on the node-split graph, compiled with Numba, cut-off at k.</p>
+</div>
+</div>
+<div style="display:flex;gap:32px;align-items:stretch">
+<div style="flex:1;background:#14213D;padding:40px;border-radius:16px;display:flex;flex-direction:column;gap:8px">
+<p style="font-family:'Source Serif 4', Georgia, serif;font-size:72px;font-weight:600;color:#F29A6E">83 s</p>
+<p style="font-size:28px;color:#C9D3E3">full hierarchy of Facebook (4,039 nodes, 88k edges, k up to 115)</p>
+</div>
+<div style="flex:1;background:#14213D;padding:40px;border-radius:16px;display:flex;flex-direction:column;gap:8px">
+<p style="font-family:'Source Serif 4', Georgia, serif;font-size:72px;font-weight:600;color:#F29A6E">non-maximal</p>
+<p style="font-size:28px;color:#C9D3E3">sets returned by networkx.k_components (e.g. Les Misérables, k = 3: 32 of 34 nodes)</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6B7486">5 / 12 · Verified against brute-force enumeration on 25 random graphs; 59 unit tests</p>
+<aside>A methods contribution we did not plan. NetworkX's k_components is the standard tool, but on Les Misérables it returns a 32-node 3-component that sits strictly inside a 3-connected 34-node set, so it is not maximal. We wrote an exact algorithm. Splitting along any cut smaller than k is safe because a k-component cannot be disconnected by fewer than k nodes. Most connectivity checks are certified without max-flow using common neighbours or a bootstrap-percolation-style closure, which is proven in Lemma 1. The rest uses a fast Numba max-flow. Facebook takes 83 seconds; before our flow code it did not finish in 30 minutes.</aside>
+</section>

@@ -27,7 +27,12 @@ tests/               unit tests (incl. brute-force validation of k-components)
 results/tables/      CSV tables used in the paper
 results/figures/     PDF + PNG figures
 paper/               LaTeX source (IEEEtran), generated tables, bibliography, literature notes, main.pdf
+docs/                end-to-end project documentation (PROJECT_DOCUMENTATION.md)
+slides/              12-slide presentation deck source with speaker notes
 ```
+
+**Start here:** the paper is [`paper/main.pdf`](paper/main.pdf); the full walkthrough (concepts, code,
+experiments, results, reproduction, viva Q&A) is [`docs/PROJECT_DOCUMENTATION.md`](docs/PROJECT_DOCUMENTATION.md).
 
 ## Reproduce everything
 
@@ -70,7 +75,7 @@ python -m src.pipeline null --n-null 100 --workers 4
 ```
 
 ```bash
-python -m src.benchmark_cohesion --timeout 1800
+python -m src.benchmark_cohesion --timeout 600
 ```
 
 ```bash
@@ -84,7 +89,7 @@ python -m src.make_tables
 All randomness is seeded (`SEED` in `src/pipeline.py`). Each step caches its results in `results/cache/`.
 Delete that folder to recompute from scratch. Approximate runtimes on a 12-thread, 8 GB laptop: scores
 about 6 min (dominated by betweenness on the largest networks), null models about 1.5 h (Facebook
-about 105 s per randomisation), the networkx benchmark up to a few hours because of its 30-min limits,
+about 105 s per randomisation), the networkx benchmark about an hour because of its 10-min limits,
 and everything else under 5 min. Each worker uses about 600 MB of RAM, so keep `--workers` small on 8 GB machines.
 
 ## Main results

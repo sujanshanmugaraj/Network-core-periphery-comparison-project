@@ -1,0 +1,10 @@
+<section id="bowtie" data-transition="fade" style="background:#FBFBF8;color:#14213D;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<h2 style="font-family:'Source Serif 4', Georgia, serif;font-size:64px;font-weight:600;line-height:1.1">Same nodes, different organisation: the bowtie</h2>
+<img src="/_blob/f8f6b44dfb4248207cf8f495edd10eb2" alt="Bowtie graph: two triangles sharing node X, and Zachary's karate club coloured by coreness and by cohesion level with one broker ringed" style="width:1664px;height:560px;object-fit:contain;background:#FFFFFF;border-radius:16px">
+<div style="display:flex;gap:40px">
+<p style="flex:1;font-size:32px;line-height:1.4;color:#4A5568">Every node has coreness 2 <b style="color:#14213D">and</b> cohesion level 2 — node-level measures agree perfectly.</p>
+<p style="flex:1;font-size:32px;line-height:1.4;color:#4A5568">But one 2-core = <b style="color:#14213D">two</b> 2-components glued by <b style="color:#14213D">X</b>, the cohesive broker. Remove X and it splits.</p>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6B7486">3 / 12</p>
+<aside>This toy example is the whole paper in miniature. Both measures give every node the value 2, so node rankings agree. But the k-core sees one group while cohesion sees two overlapping groups whose overlap, node X, is a broker. The karate club on the right shows the same thing on real data: coreness and cohesion level coincide at every node, yet the cohesion hierarchy singles out one broker. Proposition 3 in the paper: two k-components share fewer than k nodes, so brokers are always small glue sets.</aside>
+</section>

@@ -1,0 +1,16 @@
+<section id="hybrid" data-transition="fade" style="background:#FBFBF8;color:#14213D;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:56px">
+<h2 style="font-family:'Source Serif 4', Georgia, serif;font-size:64px;font-weight:600;line-height:1.1">RQ3 · Hybrids do not help on held-out networks</h2>
+<p style="font-size:36px;line-height:1.4;color:#4A5568">H(λ) = λ·rank(coreness) + (1−λ)·rank(x); λ tuned on training networks, tested only on held-out ones (2-fold by domain and leave-one-out).</p>
+<div style="display:flex;gap:40px">
+<div style="flex:1;background:#FFFFFF;padding:44px;border:1px solid #DCE3EE;border-top:8px solid #EB6834;border-radius:16px;display:flex;flex-direction:column;gap:16px">
+<h3 style="font-size:40px;font-weight:600">core + cohesion</h3>
+<p style="font-size:30px;line-height:1.4;color:#4A5568">0 held-out wins against the better single score; λ* flips between 0 and 1. Two near-identical rankings cannot complement each other. <b style="color:#14213D">H3 not supported.</b></p>
+</div>
+<div style="flex:1;background:#FFFFFF;padding:44px;border:1px solid #DCE3EE;border-top:8px solid #1BAF7A;border-radius:16px;display:flex;flex-direction:column;gap:16px">
+<h3 style="font-size:40px;font-weight:600">core + brokerage</h3>
+<p style="font-size:30px;line-height:1.4;color:#4A5568">Every training fold picks λ* = 0, i.e. pure brokerage. Adding coreness only hurts: the best “hybrid” is brokerage itself.</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6B7486">11 / 12 · Tuning and testing on the same networks would have overstated any hybrid gain</p>
+<aside>We planned a hybrid score and evaluated it properly: λ is chosen on training networks and reported only on held-out networks, both with a domain-stratified 2-fold split and leave-one-network-out. The core-plus-cohesion hybrid never beats its better component — unsurprising once we know the two are the same ranking. For core-plus-brokerage the training folds always choose λ = 0. We report this negative result openly: it is exactly the overfitting trap the held-out design was built to catch.</aside>
+</section>

@@ -1,0 +1,13 @@
+<section id="ablation" data-transition="fade" style="background:#F1EFE8;color:#14213D;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:44px">
+<h2 style="font-family:'Source Serif 4', Georgia, serif;font-size:64px;font-weight:600;line-height:1.1">Brokerage is more than articulation points</h2>
+<table style="font-size:30px;color:#14213D;font-family:'IBM Plex Sans', Arial, sans-serif">
+<tr><th style="width:24%;text-align:left">Robustness R (lower is better)</th><th style="width:15%;text-align:right">Degree</th><th style="width:19%;text-align:right">Articulation pts</th><th style="width:14%;text-align:right">Brokers k=2</th><th style="width:14%;text-align:right">Brokers k≥3</th><th style="width:14%;text-align:right">All levels</th></tr>
+<tr><td>Facebook</td><td style="text-align:right">0.295</td><td style="text-align:right">0.283</td><td style="text-align:right">0.283</td><td style="text-align:right">0.224 (best)</td><td style="text-align:right">0.224 (best)</td></tr>
+<tr><td>Yeast PPI</td><td style="text-align:right">0.274</td><td style="text-align:right">0.198</td><td style="text-align:right">0.230</td><td style="text-align:right">0.240</td><td style="text-align:right">0.185 (best)</td></tr>
+<tr><td>GrQc</td><td style="text-align:right">0.131</td><td style="text-align:right">0.135</td><td style="text-align:right">0.126 (best)</td><td style="text-align:right">0.128</td><td style="text-align:right">0.128</td></tr>
+<tr><td>Power grid</td><td style="text-align:right">0.063</td><td style="text-align:right">0.113 (worst)</td><td style="text-align:right">0.065</td><td style="text-align:right">0.063 (best)</td><td style="text-align:right">0.065</td></tr>
+</table>
+<p style="font-size:34px;line-height:1.4;color:#14213D">The signal lives in the <b>higher levels</b> of the cohesion hierarchy: on Facebook only k ≥ 3 brokers help, on Yeast only the full hierarchy reaches the best R, and plain articulation points <b>hurt</b> the power grid.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6B7486">10 / 12 · All orderings remove flagged nodes first, then the rest by degree</p>
+<aside>The obvious objection: brokerage at k = 2 is just articulation points, which everyone knows are critical. This ablation answers it. Classical articulation points cut off tree branches; on the power grid removing them first is much worse than degree. On Facebook, the entire gain comes from brokers at k of 3 or more, i.e. small sets that glue together dense friend circles. On Yeast, neither part alone is enough; only the full multi-level hierarchy gets to 0.185. So the contribution needs structural cohesion proper, not just biconnectivity.</aside>
+</section>

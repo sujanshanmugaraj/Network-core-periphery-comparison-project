@@ -1,0 +1,19 @@
+{
+  "v": 4,
+  "createdOnFiles": {"v": 1, "at": "2026-10-13T23:20:00+05:30"},
+  "lists": "css",
+  "title": "Do Two Notions of Core Agree?",
+  "order": ["cover", "question", "bowtie", "design", "algorithm", "nodelevel", "grouplevel", "nullmodel", "robustness", "ablation", "hybrid", "takeaways"],
+  "sections": {
+    "s1": {"description": "The question and why the two notions can differ", "start": "cover"},
+    "s2": {"description": "Data, methods and the exact cohesion algorithm", "start": "design"},
+    "s3": {"description": "RQ1: agreement at node level and group level", "start": "nodelevel"},
+    "s4": {"description": "RQ2 and RQ3: robustness, brokerage and hybrids", "start": "robustness"},
+    "s5": {"description": "Conclusions and limitations", "start": "takeaways"}
+  },
+  "faces": {
+    "source-serif-4": {"family": "Source Serif 4", "href": "https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;600;700&display=swap"},
+    "ibm-plex-sans": {"family": "IBM Plex Sans", "href": "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap"}
+  },
+  "designSystems": []
+}

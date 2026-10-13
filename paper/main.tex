@@ -125,8 +125,8 @@ block models~\cite{zhang2015identification}; Gallagher et al.~\cite{gallagher202
 find. Csermely et al.~\cite{csermely2013structure} review the functional roles attributed to cores. A
 common thread is that these notions define the core by \emph{density}.
 
-\textbf{k-cores.} Seidman~\cite{seidman1983network} introduced $k$-cores and already noted that a $k$-core
-need not be $k$-connected. Core decomposition takes linear time~\cite{batagelj2003cores}, and coreness is
+\textbf{k-cores.} Seidman~\cite{seidman1983network} introduced $k$-cores as a minimum-degree relaxation
+of cohesive subgroups; minimum degree $k$ is necessary but not sufficient for $k$-connectivity. Core decomposition takes linear time~\cite{batagelj2003cores}, and coreness is
 a popular centrality: Kitsak et al.~\cite{kitsak2010identification} found it predicts spreading influence
 better than degree, while Liu et al.~\cite{liu2015core} showed that densely knit ``core-like groups''
 weakly attached to the rest of the network inflate coreness and mislead such rankings---a phenomenon
@@ -271,7 +271,10 @@ C^*_i=\begin{cases}\dfrac{i(1-\alpha)}{2\lfloor\beta N\rfloor}, & i\le\lfloor\be
 \end{equation}
 normalised to unit sum, and the assignment (a permutation) maximising the core quality
 $R_{\alpha,\beta}=\sum_{u,v}A_{uv}C_uC_v$ is sought. The aggregate core score is
-$CS(v)=Z\sum_{\alpha,\beta}C_v(\alpha,\beta)R_{\alpha,\beta}$ with $Z$ such that $\max_v CS(v)=1$. We use
+\begin{equation}
+CS(v)=Z\sum_{\alpha,\beta}C_v(\alpha,\beta)\,R_{\alpha,\beta},
+\end{equation}
+with $Z$ such that $\max_v CS(v)=1$. We use
 $\alpha\in\{0,0.2,\dots,1\}$ and $\beta\in\{0.1,0.2,\dots,0.9\}$ ($54$ pairs; the original paper uses a
 $100\times100$ grid, which is computationally prohibitive for our larger networks). For each pair we run
 simulated annealing~\cite{kirkpatrick1983optimization} over swaps of two nodes' values, started from the
@@ -347,8 +350,9 @@ cutoff $k$, compiled with Numba~\cite{lam2015numba}; a minimum vertex cut is rea
 
 \subsection{Agreement measures (RQ1)}
 \textbf{Node level.} For each pair of score vectors we report Spearman's $\rho_s$; the Jaccard overlap
-of the top-$x\%$ sets ($x\in\{5,10,20\}$), averaged over $50$ uniformly random tie-breaks so that a shared
-deterministic tie-breaker cannot inflate agreement; and the adjusted mutual information
+of the top-$x\%$ sets ($x\in\{5,10,20\}$), where a top set contains every node scoring at least the
+$\lceil xN\rceil$-th largest value (so tied nodes are included together and identical rankings give
+overlap $1$; the lowest tier, e.g.\ the BE periphery, is never part of a top set); and the adjusted mutual information
 (AMI)~\cite{vinh2010information} between binary core labels (main $k$-core; deepest $k$-components; the BE
 labelling; the top-$|\text{BE core}|$ nodes by $CS$).
 \textbf{Group level.} For every $k\ge2$ we compare the connected components of the $k$-core
@@ -497,8 +501,9 @@ essentially no gap nodes, $F\approx1$ and no brokers, as predicted by {\L}uczak'
 graphs~\cite{luczak1991size}. For GrQc, Facebook, Yeast and the power grid the observed fragmentation and
 broker fraction lie above all $100$ randomisations (empirical $p=0.02$, the smallest attainable value).
 Only in the two smallest networks (Karate, Air India) do randomisations occasionally produce brokers,
-a finite-size effect. Interestingly, the BE correlation of most empirical networks is \emph{lower} than
-that of their randomisations (e.g.\ $z=-54$ for GrQc and $-48$ for Yeast): clustered networks are less
+a finite-size effect. Interestingly, the BE correlation of five of the eight empirical networks is
+significantly \emph{lower} than that of their randomisations (e.g.\ $z=-83$ for Facebook, $-54$ for GrQc
+and $-48$ for Yeast; $p=0.02$ in all five): clustered networks are less
 core--periphery-like, in the BE sense, than random graphs with the same degrees---plausibly because
 rewiring replaces local, clustered ties by ties among high-degree nodes, which the BE pattern rewards. Of the two notions, it is the cohesion structure---not the density-based
 CP fit---that carries non-random signal in these networks.
@@ -632,15 +637,12 @@ core$+$brokerage hybrid.}
 \end{figure*}
 
 \subsection{Computation}
-Table~\ref{tab:bench} compares our exact algorithm with NetworkX. Thanks to the certificates of
-Lemma~\ref{lem:cert}, only a small fraction of node pairs require a max-flow computation, and the full
-$k$-component hierarchy of the largest network, Facebook ($k_{\max}=115$), is computed in about
-$83$\,s on a laptop.
+%COMPUTATION%
 
 \begin{table}[t]
 \centering
-\caption{Runtime of the exact $k$-component computation (ours) and of \texttt{networkx.k\_components}
-(time limit $30$\,min), number of levels $k$ at which the outputs differ, and number of NetworkX
+\caption{Runtime of the exact $k$-component computation (ours) and of the NetworkX $k$-component routine
+(time limit $10$\,min), number of levels $k$ at which the outputs differ, and number of NetworkX
 components that are strictly contained in one of ours (i.e.\ not maximal).}
 \label{tab:bench}
 \input{tables/tab_bench.tex}
@@ -654,7 +656,7 @@ $\coh_v\le\cn_v$, and our data show that the inequality is almost always tight: 
 almost $k$-cohesive \emph{node by node}. The density view and the connectivity view therefore rank nodes
 nearly identically, and for tasks that only need a ranking---for example choosing seeds or computing a
 centrality---the linear-time $k$-core is an excellent proxy for the far more expensive cohesion
-level. The two views part ways at the level of \emph{groups}. In clustered, assortative networks (GrQc,
+level. The two views part ways at the level of \emph{groups}. In highly clustered networks (GrQc,
 Facebook, Yeast) and in the sparse power grid, $k$-cores are federations of cohesive groups joined
 through a few shared nodes; in Email-EU and \emph{C.~elegans}, which are dense and well mixed, they are
 not. This matches the intuition behind ``core-like groups''~\cite{liu2015core} and structural
@@ -666,8 +668,9 @@ hierarchy is inherently plural.
 it is cohesive; a $k$-core with $F\gg1$ is better described as a set of overlapping cohesive groups. For
 robustness and vulnerability analyses, the useful output of the cohesion hierarchy is not a node's level
 but its \emph{multiplicity}: brokers that sit in several $k$-components at once are where the hierarchy
-can be cut. Cohesive brokerage is parameter-free, reuses the decomposition, and was best on the networks
-where the group-level gap is large---a property that can be measured in advance.
+can be cut. Cohesive brokerage is parameter-free, reuses the decomposition, and gave its largest gains on
+the networks where the group-level gap is large---a property that can be measured before any attack is
+simulated.
 
 \textbf{Limitations.} (i) Eight networks support statements about our sample, not about networks in
 general; all comparisons are reported with effect sizes, and none survives multiple-testing correction at

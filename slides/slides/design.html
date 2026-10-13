@@ -1,0 +1,28 @@
+<section id="design" data-transition="fade" style="background:#F1EFE8;color:#14213D;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:44px">
+<h2 style="font-family:'Source Serif 4', Georgia, serif;font-size:64px;font-weight:600;line-height:1.1">Eight networks, three domains, one yardstick</h2>
+<div style="display:flex;gap:48px">
+<table style="flex:1;font-size:28px;color:#14213D;font-family:'IBM Plex Sans', Arial, sans-serif">
+<tr><th style="width:44%;text-align:left">Network</th><th style="width:28%;text-align:left">Domain</th><th style="width:28%;text-align:right">Nodes</th></tr>
+<tr><td>Zachary karate club</td><td>Social</td><td style="text-align:right">34</td></tr>
+<tr><td>arXiv GR-QC co-authors</td><td>Social</td><td style="text-align:right">4,158</td></tr>
+<tr><td>EU research e-mail</td><td>Social</td><td style="text-align:right">986</td></tr>
+<tr><td>Facebook ego networks</td><td>Social</td><td style="text-align:right">4,039</td></tr>
+<tr><td>Yeast PPI (Collins)</td><td>Biological</td><td style="text-align:right">1,004</td></tr>
+<tr><td>C. elegans neurons</td><td>Biological</td><td style="text-align:right">297</td></tr>
+<tr><td>US power grid</td><td>Infrastructure</td><td style="text-align:right">4,941</td></tr>
+<tr><td>India domestic air routes</td><td>Infrastructure</td><td style="text-align:right">68</td></tr>
+</table>
+<div style="width:620px;display:flex;flex-direction:column;gap:24px">
+<div style="background:#FFFFFF;padding:36px;border-radius:16px;border:1px solid #DCE3EE;display:flex;flex-direction:column;gap:12px">
+<h3 style="font-size:32px;font-weight:600">Yardstick: robustness</h3>
+<p style="font-size:28px;line-height:1.4;color:#4A5568">Remove nodes in score order; R = mean size of the giant component. Lower R = more critical nodes found.</p>
+</div>
+<div style="background:#FFFFFF;padding:36px;border-radius:16px;border:1px solid #DCE3EE;display:flex;flex-direction:column;gap:12px">
+<h3 style="font-size:32px;font-weight:600">Controls</h3>
+<p style="font-size:28px;line-height:1.4;color:#4A5568">100 degree-preserving null models per network; held-out tuning; Wilcoxon, bootstrap CIs, Holm.</p>
+</div>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6B7486">4 / 12 · All graphs simple, undirected, largest connected component</p>
+<aside>We picked networks with very different structure: dense well-mixed social networks, highly clustered collaboration and protein networks, and a sparse spatial power grid. Everything is converted to simple undirected graphs and we keep the largest component. Methods compared: degree, betweenness, adaptive degree, k-core, Borgatti–Everett, Rombach, cohesion level and our new cohesive brokerage score. The yardstick is the Schneider robustness index R. For statistics, eight networks is a small sample, so we report effect sizes and do not oversell p-values.</aside>
+</section>

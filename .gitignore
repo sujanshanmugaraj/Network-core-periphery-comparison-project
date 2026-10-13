@@ -2,7 +2,8 @@
 *.pyc
 .pytest_cache/
 data/raw/
-results/cache/
+results/cache/*
+!results/cache/null_samples.csv
 results/log_*.txt
 paper/*.aux
 paper/*.log

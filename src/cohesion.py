@@ -207,6 +207,8 @@ def find_small_cut(H: nx.Graph, k: int, stats: dict | None = None):
     Nv = adj[v]
 
     def ok_pair(a, b, certifiers):
+        if stats is not None:
+            stats["pairs"] = stats.get("pairs", 0) + 1
         if len(adj[a] & adj[b]) >= k:
             return True
         cf = certifiers.get(a)
