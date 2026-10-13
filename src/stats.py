@@ -31,11 +31,13 @@ def paired_comparison(a, b, seed: int = 0) -> dict:
     diff = R_A - R_B; negative means A dismantles the networks faster."""
     a, b = np.asarray(a, float), np.asarray(b, float)
     d = a - b
-    if np.allclose(d, 0):
+    d[np.abs(d) < 1e-12] = 0.0
+    nz = d[d != 0]  # Wilcoxon's convention: zero differences are discarded
+    if nz.size == 0:
         p = 1.0
     else:
-        p = float(wilcoxon(a, b, zero_method="wilcox", alternative="two-sided", method="exact").pvalue
-                  if np.count_nonzero(d) <= 25 else wilcoxon(a, b).pvalue)
+        p = float(wilcoxon(nz, zero_method="wilcox", alternative="two-sided",
+                           method="exact" if nz.size <= 25 else "approx").pvalue)
     lo, hi = bootstrap_ci(d, seed=seed)
     return {
         "mean_diff": float(d.mean()),
@@ -48,6 +50,7 @@ def paired_comparison(a, b, seed: int = 0) -> dict:
         "wilcoxon_p": p,
         "rank_biserial": rank_biserial(d),
         "n": int(d.size),
+        "n_nonzero": int(nz.size),
     }
 
 

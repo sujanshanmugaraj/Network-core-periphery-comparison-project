@@ -15,10 +15,28 @@ def spearman(a, b) -> float:
     return float(spearmanr(a, b).correlation)
 
 
+def top_set(s, x: float) -> set:
+    """Tie-inclusive top-x set: every node scoring at least the ceil(x N)-th largest value.
+    Identical rankings therefore always give identical sets, whatever the tie structure.
+    The lowest tier is never included (e.g. for a binary core/periphery labelling whose
+    core is smaller than x N, the top set is the core)."""
+    s = np.asarray(s, float)
+    k = max(1, int(np.ceil(x * s.size)))
+    thr = np.sort(s)[::-1][k - 1]
+    if thr == s.min() and np.any(s > thr):
+        return set(np.flatnonzero(s > thr))
+    return set(np.flatnonzero(s >= thr))
+
+
 def topx_jaccard(a, b, x: float, n_draws: int = 50, seed: int = 0) -> float:
-    """Expected Jaccard overlap of the top-x fraction sets, ties broken uniformly at
-    random (averaged over ``n_draws`` draws).  Random tie-breaking avoids inflating
-    agreement through a shared deterministic tie-breaker such as degree."""
+    """Jaccard overlap of the tie-inclusive top-x sets (see ``top_set``)."""
+    A, B = top_set(a, x), top_set(b, x)
+    return len(A & B) / len(A | B)
+
+
+def topx_jaccard_random_ties(a, b, x: float, n_draws: int = 50, seed: int = 0) -> float:
+    """Expected Jaccard overlap of exactly-sized top-x sets with ties broken uniformly at
+    random (sensitivity analysis; heavily penalises large tied shells)."""
     n = len(a)
     k = max(1, int(round(x * n)))
     rng = np.random.default_rng(seed)

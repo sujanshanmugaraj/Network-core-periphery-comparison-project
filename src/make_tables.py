@@ -159,6 +159,24 @@ def tab_hybrid():
     write("tab_hybrid", "\n".join(s))
 
 
+def tab_ablation():
+    a = pd.read_csv(TAB / "broker_ablation.csv").set_index("key").loc[NETWORKS]
+    cols = [("R_degree", "Deg."), ("R_articulation", "art."), ("R_broker_k2", "$b_{k=2}$"),
+            ("R_broker_k3plus", "$b_{k\\ge3}$"), ("R_broker", "$b$")]
+    s = ["\\setlength{\\tabcolsep}{2.8pt}\\footnotesize",
+         "\\begin{tabular}{l rrr | rrrrr}", "\\toprule",
+         " & \\multicolumn{3}{c|}{\\# nodes} & \\multicolumn{5}{c}{$R$ (ties broken by degree)}\\\\",
+         "Network & art. & $b_{k=2}$ & $b_{k\\ge3}$ & " + " & ".join(h for _, h in cols) + "\\\\", "\\midrule"]
+    for i, k in enumerate(NETWORKS):
+        r = a.loc[k]
+        best = min(r[c] for c, _ in cols)
+        cells = [f"\\textbf{{{r[c]:.3f}}}" if abs(r[c] - best) < 1e-12 else f"{r[c]:.3f}" for c, _ in cols]
+        s.append(midrules(i) + f"{SHORT[k]} & {int(r.n_articulation)} & {int(r.n_broker_k2)} & "
+                 f"{int(r.n_broker_k3plus)} & " + " & ".join(cells) + "\\\\")
+    s += ["\\bottomrule", "\\end{tabular}"]
+    write("tab_ablation", "\n".join(s))
+
+
 def tab_bench():
     b = pd.read_csv(TAB / "cohesion_benchmark.csv").set_index("key")
     s = ["\\setlength{\\tabcolsep}{3pt}\\footnotesize",
@@ -177,7 +195,8 @@ def tab_bench():
 
 
 def main():
-    for f in (tab_datasets, tab_agreement, tab_null, tab_robustness, tab_comparisons, tab_hybrid, tab_bench):
+    for f in (tab_datasets, tab_agreement, tab_null, tab_robustness, tab_comparisons, tab_hybrid,
+              tab_ablation, tab_bench):
         try:
             f()
         except (FileNotFoundError, KeyError, IndexError) as e:

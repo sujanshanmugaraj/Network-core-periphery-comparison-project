@@ -1,0 +1,10 @@
+domain,A,spearman,jaccard_top10,ami
+Biological,be,0.299,0.259,0.224
+Biological,kcore,0.999,1.0,1.0
+Biological,rombach,0.948,0.612,0.43
+Infrastructure,be,0.316,0.256,0.155
+Infrastructure,kcore,0.994,0.999,1.0
+Infrastructure,rombach,0.851,0.366,0.165
+Social,be,0.423,0.396,0.264
+Social,kcore,0.998,0.99,1.0
+Social,rombach,0.919,0.652,0.445

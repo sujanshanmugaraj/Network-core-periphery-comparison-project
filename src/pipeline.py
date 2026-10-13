@@ -346,11 +346,69 @@ def stage_robustness(workers=4):
         "domain": df["domain"],
         "cohesion_minus_kcore": df["cohesion"] - df["kcore"],
         "broker_gain_vs_kcore": (df["kcore"] - df["broker"]) / df["kcore"],
+        "broker_minus_degree": df["broker"] - df["degree"],
         "transitivity": st["transitivity"], "avg_clustering": st["avg_clustering"],
         "fragmentation": st["fragmentation"], "frac_gap_nodes": st["frac_gap_nodes"],
     })
+    out["broker_gain_vs_degree"] = (df["degree"] - df["broker"]) / df["degree"]
     out.to_csv(TAB / "h2_structure_vs_gain.csv")
     print(out.round(3).to_string())
+    stage_correlations()
+
+
+def stage_correlations():
+    """Which network properties go with the node-level gap, the group-level gap and the
+    brokerage gain?  Spearman correlations across the eight networks (descriptive)."""
+    from scipy.stats import spearmanr
+
+    st = pd.read_csv(TAB / "dataset_table.csv").set_index("key").loc[NETWORKS]
+    g = pd.read_csv(TAB / "h2_structure_vs_gain.csv").set_index("key").loc[NETWORKS]
+    st["group_disagreement"] = 1 - st["group_jaccard"]
+    for c in ["broker_gain_vs_kcore", "broker_gain_vs_degree", "cohesion_minus_kcore"]:
+        st[c] = g[c]
+    xs = ["N", "density", "avg_degree", "avg_clustering", "transitivity", "assortativity",
+          "avg_path_length", "degeneracy", "frac_gap_nodes", "fragmentation", "group_disagreement"]
+    ys = ["frac_gap_nodes", "fragmentation", "group_disagreement", "broker_gain_vs_kcore",
+          "broker_gain_vs_degree", "cohesion_minus_kcore"]
+    corr = []
+    for y in ys:
+        for x in xs:
+            if x == y:
+                continue
+            rho, p = spearmanr(st[x], st[y])
+            corr.append({"y": y, "x": x, "spearman": rho, "p": p, "n": len(st)})
+    df = pd.DataFrame(corr)
+    df.to_csv(TAB / "h2_correlations.csv", index=False)
+    print(df.pivot(index="x", columns="y", values="spearman").round(2).to_string())
+
+
+def stage_ablation():
+    """Brokerage ablation: which levels of the cohesion hierarchy carry the signal?
+    Compares articulation points (classical cut vertices) with brokerage restricted to
+    k = 2, to k >= 3, and the full hierarchy; all ties broken by degree."""
+    rows = []
+    for net in NETWORKS:
+        r = load_cache(net)
+        G = load_graph(net)
+        csr = to_csr(G)
+        n, deg = G.number_of_nodes(), r["degree"]
+        kmax = max(r["kcomponents"])
+        sub = lambda ks: broker_scores(n, {k: v for k, v in r["kcomponents"].items() if k in ks})
+        art = np.zeros(n)
+        art[list(nx.articulation_points(G))] = 1
+        scores = {"degree": (deg, None), "articulation": (art, deg),
+                  "broker_k2": (sub({2}), deg), "broker_k3plus": (sub(set(range(3, kmax + 1))), deg),
+                  "broker": (r["broker"], deg)}
+        row = {"key": net, "n_articulation": int(art.sum()),
+               "n_broker_k2": int((scores["broker_k2"][0] > 0).sum()),
+               "n_broker_k3plus": int((scores["broker_k3plus"][0] > 0).sum()),
+               "n_broker": int((r["broker"] > 0).sum())}
+        for name, (s, tb) in scores.items():
+            row[f"R_{name}"] = robustness_curve(G, order_by(s, tb), csr)[1]
+        rows.append(row)
+    df = pd.DataFrame(rows)
+    df.to_csv(TAB / "broker_ablation.csv", index=False)
+    print(df.round(4).to_string())
 
 
 # ============================================================================ RQ3
@@ -405,7 +463,7 @@ def stage_hybrid():
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("stage", choices=["scores", "agreement", "null", "summarize-null", "robustness",
-                                      "hybrid", "all"])
+                                      "ablation", "correlations", "hybrid", "all"])
     ap.add_argument("--nets", nargs="*", default=NETWORKS)
     ap.add_argument("--n-null", type=int, default=100)
     ap.add_argument("--workers", type=int, default=4)
@@ -416,6 +474,10 @@ def main():
         stage_agreement()
     if a.stage in ("robustness", "all"):
         stage_robustness(a.workers)
+    if a.stage == "correlations":
+        stage_correlations()
+    if a.stage in ("ablation", "all"):
+        stage_ablation()
     if a.stage in ("hybrid", "all"):
         stage_hybrid()
     if a.stage in ("null", "all"):

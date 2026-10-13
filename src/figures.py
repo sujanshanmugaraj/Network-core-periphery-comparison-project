@@ -45,8 +45,15 @@ plt.rcParams.update({
     "axes.edgecolor": INK2, "axes.labelcolor": INK, "xtick.color": INK2, "ytick.color": INK2,
     "axes.spines.top": False, "axes.spines.right": False, "axes.grid": True,
     "grid.color": GRID, "grid.linewidth": 0.6, "legend.frameon": False, "savefig.dpi": 300,
-    "savefig.bbox": "tight", "lines.linewidth": 1.4, "axes.titlecolor": INK,
+    "savefig.bbox": "tight", "lines.linewidth": 1.4, "axes.titlecolor": INK, "axes.axisbelow": True,
 })
+
+
+def _plain_log_axis(ax, ticks):
+    from matplotlib.ticker import FixedLocator, NullLocator
+    ax.xaxis.set_major_locator(FixedLocator(ticks))
+    ax.xaxis.set_minor_locator(NullLocator())
+    ax.set_xticklabels([f"{t:g}" for t in ticks])
 
 
 def save(fig, name):
@@ -111,7 +118,8 @@ def fig_bowtie_karate():
         cb = fig.colorbar(nodes, ax=ax, fraction=0.04, pad=0.01, ticks=range(0, 5))
         cb.outline.set_visible(False); cb.ax.tick_params(labelsize=7)
     axes[2].legend(handles=[Line2D([], [], marker="o", ls="", mfc="none", mec=COLOR["broker"], mew=1.8,
-                                   label="cohesive broker")], loc="lower left", fontsize=6.5)
+                                   label="cohesive broker")], loc="upper left", fontsize=6.5,
+                   bbox_to_anchor=(-0.05, 1.02))
     save(fig, "fig1_bowtie_karate")
 
 
@@ -119,8 +127,8 @@ def fig_bowtie_karate():
 def fig_agreement_heatmaps():
     df = pd.read_csv(TAB / "agreement_long.csv")
     methods = ["degree", "kcore", "be", "rombach", "cohesion"]
-    fig, axes = plt.subplots(2, 4, figsize=(7.2, 3.9))
-    for ax, net in zip(axes.flat, NETWORKS):
+    fig, axes = plt.subplots(2, 4, figsize=(7.2, 4.1), gridspec_kw={"wspace": 0.12, "hspace": 0.45})
+    for idx, (ax, net) in enumerate(zip(axes.flat, NETWORKS)):
         M = np.eye(len(methods))
         sub = df[df.key == net]
         for _, row in sub.iterrows():
@@ -133,8 +141,11 @@ def fig_agreement_heatmaps():
                     ax.text(j, i, f"{M[i, j]:.2f}", ha="center", va="center", fontsize=5.6,
                             color="white" if M[i, j] > 0.6 else INK)
         lab = ["Deg", "k-core", "BE", "Romb.", "Coh."]
-        ax.set_xticks(range(5), lab, rotation=45, fontsize=6); ax.set_yticks(range(5), lab, fontsize=6)
-        ax.grid(False); ax.set_title(f"{SHORT[net]} ({DATASETS[net].domain[:5]}.)", fontsize=7.5)
+        ax.set_xticks(range(5), lab, rotation=45, fontsize=6, ha="right", rotation_mode="anchor")
+        ax.set_yticks(range(5), lab if idx % 4 == 0 else [""] * 5, fontsize=6)
+        ax.tick_params(length=0)
+        dom = {"Social": "social", "Biological": "biological", "Infrastructure": "infrastructure"}
+        ax.grid(False); ax.set_title(f"{SHORT[net]} ({dom[DATASETS[net].domain]})", fontsize=7)
         for s in ax.spines.values():
             s.set_visible(False)
     cb = fig.colorbar(im, ax=axes, fraction=0.02, pad=0.02)
@@ -154,22 +165,25 @@ def fig_node_vs_group():
     for k, (a, off) in enumerate((("kcore", -0.2), ("be", 0.0), ("rombach", 0.2))):
         ax.scatter(sel(a, "spearman"), y + off, s=20, color=COLOR[a], marker=MARK[a], zorder=3,
                    edgecolors="white", linewidths=0.5, label=f"{LABEL[a]}")
-    ax.set_xlim(-0.05, 1.05); ax.set_title("(a) Node level: Spearman ρ\nwith cohesion level")
+    ax.set_xlim(-0.05, 1.05); ax.set_title("(a) Spearman $\\rho_s$")
     ax = axes[1]; _net_axis(ax)
     for k, (a, off) in enumerate((("kcore", -0.2), ("be", 0.0), ("rombach", 0.2))):
         ax.scatter(sel(a, "jaccard_top10"), y + off, s=20, color=COLOR[a], marker=MARK[a], zorder=3,
                    edgecolors="white", linewidths=0.5)
-    ax.set_xlim(-0.05, 1.05); ax.set_title("(b) Node level: Jaccard\nof top-10% sets")
+    ax.set_xlim(-0.05, 1.05); ax.set_title("(b) top-10% Jaccard")
     ax = axes[2]; _net_axis(ax)
     ax.barh(y, st["group_jaccard"], color=COLOR["kcore"], height=0.5)
-    ax.set_xlim(0, 1.05); ax.set_title("(c) Group level: best-match\nJaccard, k-core vs k-comp.")
+    ax.set_xlim(0, 1.05); ax.set_title("(c) group Jaccard $J_G$")
     ax = axes[3]; _net_axis(ax)
     ax.barh(y, st["fragmentation"], color=COLOR["cohesion"], height=0.5)
-    ax.set_xscale("log"); ax.axvline(1, color=INK2, lw=0.8)
+    ax.set_xscale("log")
     for yi, v in zip(y, st["fragmentation"]):
-        ax.text(v * 1.12, yi, f"{v:.1f}", va="center", fontsize=6, color=INK2)
-    ax.set_title("(d) Group level: fragmentation F\n(# k-comp. / # k-core groups)")
-    ax.set_xlim(0.8, st["fragmentation"].max() * 3)
+        ax.text(v * 1.08, yi, f"{v:.1f}", va="center", fontsize=6, color=INK2)
+    ax.set_title("(d) fragmentation $F$")
+    ax.set_xlim(0.9, st["fragmentation"].max() * 2.2)
+    _plain_log_axis(ax, [1, 2, 5, 10])
+    fig.text(0.31, 1.04, "Node level (vs. cohesion level $\\kappa$)", ha="center", fontsize=8, color=INK)
+    fig.text(0.76, 1.04, "Group level (k-core groups vs. k-components)", ha="center", fontsize=8, color=INK)
     h, l = axes[0].get_legend_handles_labels()
     fig.legend(h, [f"{x} vs cohesion" for x in l], loc="lower center", ncol=3, bbox_to_anchor=(0.32, -0.09),
                fontsize=6.5)
@@ -185,7 +199,14 @@ def fig_group_by_k():
         ax.plot(s.k, s.n_cc, color=COLOR["kcore"], marker="o", ms=2.5, lw=1.2, label="k-core groups")
         ax.plot(s.k, s.n_kcomp, color=COLOR["cohesion"], marker="s", ms=2.5, lw=1.2, label="k-components")
         ax.set_yscale("log"); ax.set_title(SHORT[net], fontsize=7.5); ax.tick_params(labelsize=6)
-        ax.set_ylim(0.8, max(2, s.n_kcomp.max(), s.n_cc.max()) * 1.6)
+        top = max(2, s.n_kcomp.max(), s.n_cc.max())
+        ax.set_ylim(0.8, top * 1.6)
+        from matplotlib.ticker import FixedLocator, NullLocator
+        ticks = [t for t in (1, 2, 5, 10, 20, 50, 100, 200, 500) if t <= top * 1.6]
+        ax.yaxis.set_major_locator(FixedLocator(ticks))
+        ax.yaxis.set_minor_locator(NullLocator())
+        ax.set_yticklabels([str(t) for t in ticks])
+        ax.xaxis.get_major_locator().set_params(integer=True)
     for ax in axes[1]:
         ax.set_xlabel("k")
     for ax in axes[:, 0]:
@@ -238,10 +259,10 @@ def fig_robustness_R():
             vals = df.loc[NETWORKS, col] / df.loc[NETWORKS, "random"]
             ax.scatter(vals, y, color=COLOR[m], marker=MARK[m], s=34 if m == "broker" else 22,
                        label=LABEL[m], edgecolors="white", linewidths=0.5, zorder=3)
-        ax.set_xlabel("R / R$_{random}$  (lower = more damaging)")
+        ax.set_xlabel("$R\\,/\\,R_{\\mathrm{random}}$ (lower = more damaging)")
         ax.set_title(title)
     h, l = axes[0].get_legend_handles_labels()
-    fig.legend(h, l, loc="lower center", ncol=4, bbox_to_anchor=(0.5, -0.12), fontsize=6.8)
+    fig.legend(h, l, loc="upper center", ncol=4, bbox_to_anchor=(0.5, -0.02), fontsize=6.8)
     save(fig, "fig6_robustness_relative")
 
 
@@ -269,14 +290,15 @@ def fig_hybrid():
     ax = axes[2]
     loo = h[(h.scheme == "leave-one-out") & (h.hybrid == "hybrid_broker")].set_index("test_net").loc[NETWORKS]
     y = _net_axis(ax)
-    for col, m in (("R_a", "kcore"), ("R_b", "broker"), ("R_degree", "degree"), ("R_hybrid", "hybrid")):
-        ax.scatter(loo[col] / loo["R_a"], y, color=COLOR[m], marker=MARK[m], s=26,
-                   label=LABEL[m] if m != "hybrid" else "Hybrid (held out)", edgecolors="white",
-                   linewidths=0.5, zorder=3)
+    for col, m, s in (("R_a", "kcore", 26), ("R_degree", "degree", 26), ("R_hybrid", "hybrid", 34)):
+        ax.scatter(loo[col] / loo["R_a"], y, color=COLOR[m], marker=MARK[m], s=s,
+                   label=LABEL[m] if m != "hybrid" else "Hybrid, held out (= brokerage)",
+                   edgecolors="white", linewidths=0.5, zorder=3 if m != "broker" else 4)
     ax.set_yticklabels([f"{SHORT[n]} (λ*={loo.loc[n, 'lambda_star']:.1f})" for n in NETWORKS], fontsize=6.3)
     ax.set_xlabel("R / R$_{k\\text{-core}}$"); ax.set_title("(c) Leave-one-network-out")
-    ax.legend(fontsize=6, loc="lower left")
     fig.tight_layout()
+    h, l = ax.get_legend_handles_labels()
+    fig.legend(h, l, loc="upper center", ncol=4, bbox_to_anchor=(0.5, 0.0), fontsize=6.5)
     save(fig, "fig7_hybrid")
 
 
@@ -302,12 +324,14 @@ def fig_null():
                    edgecolors="white", linewidths=0.6)
         if log:
             ax.set_xscale("log")
+            _plain_log_axis(ax, [1, 2, 5, 10])
+            ax.set_xlim(0.9, 10)
         ax.set_title(title)
-    axes[0].legend(handles=[Line2D([], [], marker="D", ls="", color=COLOR["cohesion"], label="observed"),
-                            Line2D([], [], marker="o", ls="", ms=3, color=COLOR["random"],
-                                   label="100 degree-preserving\nrandomisations")],
-                   fontsize=6, loc="lower right")
     fig.tight_layout()
+    fig.legend(handles=[Line2D([], [], marker="D", ls="", color=COLOR["cohesion"], label="observed network"),
+                        Line2D([], [], marker="o", ls="", ms=3, color=COLOR["random"],
+                               label="100 degree-preserving randomisations")],
+               fontsize=6.5, loc="upper center", ncol=2, bbox_to_anchor=(0.5, 0.0))
     save(fig, "fig8_null_models")
 
 

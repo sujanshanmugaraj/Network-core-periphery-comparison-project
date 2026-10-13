@@ -26,18 +26,29 @@
 \begin{document}
 
 \title{Do Two Notions of ``Core'' Agree?\\
-Core--Periphery Structure versus Structural Cohesion,\\Validated by Network Robustness}
+Core--Periphery Structure versus Structural Cohesion, Validated by Network Robustness}
 
-\author{\IEEEauthorblockN{Author One\IEEEauthorrefmark{1},
-Author Two\IEEEauthorrefmark{1}}
-\IEEEauthorblockA{\IEEEauthorrefmark{1}Department, Institution, City, Country\\
-Email: \{first, second\}@institution.edu}}
+\author{\IEEEauthorblockN{Anonymous Author(s)}
+\IEEEauthorblockA{Affiliation withheld for double-blind review}}
 
 \maketitle
 
 %% ============================================================== ABSTRACT
 \begin{abstract}
-%ABSTRACT%
+The ``core'' of a network is defined in two largely separate ways: by density, as in core--periphery
+models and $k$-cores, and by resistance to disconnection, as in Moody and White's structural cohesion.
+We compare the two on eight networks from social, biological and infrastructure domains, using network
+robustness under targeted node removal as an external yardstick. Node by node, the notions almost
+coincide: $k$-coreness and cohesion level have Spearman correlation $\ge0.99$ in every network, and
+ordering nodes by cohesion dismantles networks no faster than ordering them by coreness. At the group
+level they diverge: in four of the eight networks a single connected $k$-core consists of many
+overlapping $k$-components (up to $7.7$ times as many groups), a feature absent from all degree-preserving
+randomisations. We introduce \emph{cohesive brokerage}, the number of extra cohesive groups a node
+belongs to, and show that removing brokers first beats both coreness and cohesion in all eight networks,
+lowering the robustness index by up to $44\%$; the gain grows with the group-level disagreement
+(Spearman $0.88$). Rank hybrids of coreness and cohesion do not improve held-out performance. We also
+give an exact, certificate-accelerated algorithm for $k$-components and show that a widely used
+implementation can return non-maximal components.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -47,7 +58,57 @@ network robustness, targeted attack
 
 %% ============================================================== INTRODUCTION
 \section{Introduction}
-%INTRO%
+\label{sec:intro}
+Almost every network analysis eventually asks which nodes form its ``core''. Two largely separate
+literatures answer this question differently. The \emph{core--periphery} tradition, from Borgatti and
+Everett's ideal-pattern models~\cite{borgatti2000models} to continuous core scores~\cite{rombach2014core}
+and the ubiquitous $k$-core decomposition~\cite{seidman1983network,batagelj2003cores}, defines the core
+through \emph{density}: core nodes have many ties, especially to each other. The
+\emph{structural cohesion} tradition of White, Harary, Moody and
+White~\cite{white2001cohesiveness,moody2003structural} defines it through \emph{resistance to
+disconnection}: a group is cohesive to the extent that many nodes must be removed to pull it apart, which
+yields a nested hierarchy of $k$-components.
+
+The two notions are related---every $k$-component lies inside the $k$-core---but not equivalent: two
+triangles sharing a node form a $2$-core, yet removing the shared node disconnects them. How large is
+this difference in real networks, does it matter, and which notion should an analyst use? Despite the
+popularity of both ideas, they are rarely compared head-to-head, and we are not aware of a systematic
+comparison that also uses an external, functional yardstick.
+
+We compare core--periphery cores ($k$-coreness, discrete Borgatti--Everett, Rombach et al.) with
+structural cohesion on eight networks from social, biological and infrastructure domains, and use
+network robustness under targeted node removal~\cite{albert2000error,schneider2011mitigation} as the
+yardstick. We ask three questions. \textbf{RQ1:} How much do the two notions agree? \textbf{RQ2:} Which one
+identifies the nodes whose removal fragments the network fastest? \textbf{RQ3:} Does a hybrid of the two
+outperform either alone on networks it was not tuned on? We pre-stated the hypotheses that agreement is
+lower in spatial networks (H1), that cohesion-based orderings dismantle clustered networks faster than
+coreness (H2), and that a hybrid helps (H3).
+
+Our main finding is that the two notions agree on \emph{who} is central but disagree on \emph{how} the
+centre is organised. Node by node, $k$-coreness and cohesion level are almost the same ranking
+(Spearman $\ge0.99$ in all eight networks), so H2 and H3 fail: cohesion levels add nothing to coreness
+for dismantling. At the level of groups, however, a single connected $k$-core often consists of many
+overlapping $k$-components, up to $7.7$ times as many as there are $k$-core groups. This group-level gap is
+absent from degree-preserving randomisations and is tied together by a small set of \emph{cohesive
+brokers}. Removing brokers first beats $k$-coreness and cohesion in every network, beats degree in four
+of eight, and reduces the robustness index by up to $44\%$ relative to coreness, with gains that track the
+size of the group-level gap.
+
+\textbf{Contributions.}
+\begin{enumerate}
+\item A node- and group-level comparison of core--periphery and cohesion cores across three domains,
+with simple propositions that characterise how the two can differ (Section~\ref{sec:prelim}) and
+measures of group-level disagreement (fragmentation, group Jaccard).
+\item Evidence from degree-preserving null models that the group-level gap is a genuine structural
+feature, consistent with the classical result that $k$-cores of random graphs are $k$-connected.
+\item A functional validation showing that cohesion \emph{levels} do not improve on coreness, whereas a new
+parameter-free score, \emph{cohesive brokerage}, identifies critical nodes; an ablation shows that its
+signal comes from the higher levels of the cohesion hierarchy, not just articulation points.
+\item A held-out evaluation showing that rank hybrids do not help, a negative result that guards against
+overfitting claims in this area.
+\item An exact, certificate-accelerated $k$-component algorithm with a correctness proof, which also
+exposes non-maximal output of the widely used NetworkX implementation; all code is released.
+\end{enumerate}
 
 %% ============================================================== RELATED WORK
 \section{Related Work}
@@ -245,8 +306,8 @@ implement an exact algorithm (Algorithm~\ref{alg:kcomp}) and verify it against e
 \EndWhile
 \Function{SmallCut}{$H,k$} \Comment{a cut of size $<k$, or $\emptyset$}
   \State $v\gets$ a minimum-degree node of $H$
-  \For{$(x,y)\in\{(v,w):w\notin N[v]\}\cup\{(x,y)\subseteq N(v): xy\notin E\}$}
-    \If{\textbf{not} \Call{Certified}{$x,y,k$} \textbf{and} $\kappa(x,y)<k$ (max-flow)}
+  \For{each pair $(x,y)\in\mathcal{P}_v$} \Comment{see text}
+    \If{\textbf{not} \Call{Cert}{$x,y,k$} \textbf{and} $\kappa(x,y)<k$}
       \State \Return a minimum $x$--$y$ vertex cut
     \EndIf
   \EndFor
@@ -261,8 +322,10 @@ $D$ of $G[C]-S$ and $K\subseteq D\cup S$. Pruning to the $k$-core never removes 
 (Proposition~\ref{prop:le}). Hence no $k$-component is lost, and a piece that is $k$-connected equals the
 $k$-component containing it, i.e.\ it is maximal. The recursion terminates because each piece $D\cup S$
 is a proper subset of $C$. \emph{(ii) The test is complete.} With $v$ of minimum degree, $G[C]$ is
-$k$-connected iff $\kappa(v,w)\ge k$ for all non-neighbours $w$ of $v$ and $\kappa(x,y)\ge k$ for all
-non-adjacent $x,y\in N(v)$~\cite{even1975algorithm,esfahanian2013connectivity}.
+$k$-connected iff $\kappa(x,y)\ge k$ for every pair in
+$\mathcal{P}_v=\{(v,w):w\notin N(v)\cup\{v\}\}\cup\{(x,y):x,y\in N(v),\,xy\notin E\}$, i.e.\ for $v$ and each
+of its non-neighbours and for each non-adjacent pair of its
+neighbours~\cite{even1975algorithm,esfahanian2013connectivity}.
 
 \textbf{Certificates.} Most pairs are certified without a max-flow computation:
 \begin{lemma}\label{lem:cert}
@@ -359,15 +422,278 @@ clustering; $r$: degree assortativity; $k_{\max}$: degeneracy; $\coh_{\max}$: ma
 
 %% ============================================================== RESULTS
 \section{Results}
-%RESULTS%
+\label{sec:results}
+
+\subsection{RQ1: Do the two notions of core agree?}
+\textbf{Node level: almost perfectly for k-cores, weakly for CP models.} Table~\ref{tab:agree} and
+Figs.~\ref{fig:heat}--\ref{fig:nodegroup} summarise agreement with the cohesion level $\coh$. $k$-core
+coreness and cohesion are nearly interchangeable as rankings: Spearman $\rho_s\ge0.99$ and top-$10\%$
+Jaccard $J_{10}\ge0.96$ in every network, and the main core coincides exactly with the deepest
+$k$-components (AMI $=1$) in all eight. The fraction of \emph{gap nodes} ($\cn_v>\coh_v$) is zero in four
+networks and at most $15.7\%$ (Facebook); because $87\%$ of gap nodes lose a single level, the
+cohesion deficit $1-\sum_v\coh_v/\sum_v\cn_v$ never exceeds $1\%$. The classical CP models agree
+much less: Rombach's $CS$ reaches $\rho_s=0.73$--$0.99$ and BE's binary labels only $\rho_s=0.24$--$0.54$.
+Across domains, agreement of the CP models with cohesion is lowest for the infrastructure networks
+(mean $\rho_s$ for $CS$: social $0.92$, biological $0.95$, infrastructure $0.85$), which is the pattern
+anticipated by H1 for spatial networks; for $k$-coreness, however, agreement is uniformly near perfect
+($0.994$--$0.999$), so H1 is \emph{not} supported for the most widely used CP proxy.
+
+\begin{table}[t]
+\centering
+\caption{Agreement with structural cohesion. Node level: Spearman $\rho_s$ of $\coh$ with $k$-coreness
+$c$, BE labels and Rombach $CS$; Jaccard of the (tie-inclusive) top-$10\%$ sets of $c$ and $\coh$;
+percentage of gap nodes ($\cn_v>\coh_v$). Group level: fragmentation $F$, group Jaccard $J_G$, coverage and
+number of cohesive brokers.}
+\label{tab:agree}
+\input{tables/tab_agreement.tex}
+\end{table}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig2_agreement_heatmaps.pdf}
+\caption{Node-level Spearman correlations between degree, $k$-coreness, BE labels, Rombach $CS$ and
+cohesion level in each network.}
+\label{fig:heat}
+\end{figure*}
+
+\textbf{Group level: substantial disagreement in half of the networks.} Node levels hide how the cores
+are organised. In Email-EU and \emph{C.~elegans} every connected $k$-core group is $k$-cohesive at every
+$k$ ($F=1$, $J_G=1$): the two notions of core are identical. In GrQc, Facebook, Yeast and the power grid,
+by contrast, a single connected $k$-core repeatedly breaks into many overlapping $k$-components
+($F=4.2$--$7.7$; Fig.~\ref{fig:groupk}). GrQc's $2$-core is one connected group but contains $260$
+$2$-components; on Facebook, $k$-core groups overlap their best-matching $k$-component with a
+size-weighted Jaccard of only $J_G=0.53$.
+The cores are therefore \emph{the same nodes, organised differently}: coverage stays $\ge0.98$, so almost
+every $k$-core node does belong to some $k$-component, but the $k$-core glues several cohesive groups
+together through a small number of brokers ($71$--$558$ nodes, $1$--$13\%$ of the network).
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig3_node_vs_group.pdf}
+\caption{Node-level agreement (a, b) is near perfect between $k$-coreness and cohesion in every network,
+whereas group-level agreement (c, d) varies widely: $k$-core groups split into up to $7.7$ times as many
+$k$-components.}
+\label{fig:nodegroup}
+\end{figure*}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig4_group_structure_by_k.pdf}
+\caption{Number of connected $k$-core groups and of $k$-components for every $k$ (log scale). In Email-EU
+and \emph{C.~elegans} the two curves coincide.}
+\label{fig:groupk}
+\end{figure}
+
+\textbf{What drives the gap?} Across the eight networks, the size-normalised group disagreement
+$1-J_G$ increases with transitivity ($\rho_s=0.67$) and degree assortativity ($0.64$), but not with
+size ($0.40$), and the share of gap nodes is strongly associated with assortativity ($\rho_s=0.88$,
+$p=0.004$). The raw fragmentation $F$, in contrast, grows with network size ($\rho_s=0.78$), because
+larger networks simply contain more groups; we therefore treat $F$ as descriptive and rely on the
+null model to separate structure from size.
+
+\textbf{The gap is not an artefact of the degree sequence.} In degree-preserving randomisations of the
+same networks the gap vanishes (Table~\ref{tab:null}, Fig.~\ref{fig:null}): randomised graphs have
+essentially no gap nodes, $F\approx1$ and no brokers, as predicted by {\L}uczak's theorem for random
+graphs~\cite{luczak1991size}. For GrQc, Facebook, Yeast and the power grid the observed fragmentation and
+broker fraction lie above all $100$ randomisations (empirical $p=0.02$, the smallest attainable value).
+Only in the two smallest networks (Karate, Air India) do randomisations occasionally produce brokers,
+a finite-size effect. Interestingly, the BE correlation of most empirical networks is \emph{lower} than
+that of their randomisations (e.g.\ $z=-54$ for GrQc and $-48$ for Yeast): clustered networks are less
+core--periphery-like, in the BE sense, than random graphs with the same degrees---plausibly because
+rewiring replaces local, clustered ties by ties among high-degree nodes, which the BE pattern rewards. Of the two notions, it is the cohesion structure---not the density-based
+CP fit---that carries non-random signal in these networks.
+
+\begin{table}[t]
+\centering
+\caption{Observed statistics versus the mean of $100$ degree-preserving randomisations, and the
+$z$-score of the BE correlation $\rho^*$.}
+\label{tab:null}
+\input{tables/tab_null.tex}
+\end{table}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig8_null_models.pdf}
+\caption{Observed values (diamonds) against $100$ degree-preserving randomisations (grey) for
+fragmentation $F$ (log scale), the fraction of cohesive brokers and the BE correlation $\rho^*$.}
+\label{fig:null}
+\end{figure*}
+
+\subsection{RQ2: Which notion finds the critical nodes?}
+Table~\ref{tab:rob} lists the robustness index of every ordering, Fig.~\ref{fig:curves} shows the
+curves, and Table~\ref{tab:cmp} the paired comparisons.
+
+\textbf{Cohesion level does not beat coreness.} Because the two rankings are almost identical, so are
+their attacks: the mean difference is $\overline{\Delta R}=+0.002$ ($95\%$ CI $[-0.001,0.005]$; $2$ wins,
+$3$ losses, $3$ exact ties). H2 is therefore not supported. Both are clearly \emph{worse} than plain
+degree ($\overline{\Delta R}=+0.029$ for coreness, $0/8$ wins, $r_{rb}=1$), confirming that deep
+$k$-shells are not where a network is most vulnerable~\cite{liu2015core}. Rombach's $CS$ is worse still
+on average, while BE's ``core first, then by degree'' ordering is statistically indistinguishable from degree.
+
+\textbf{Cohesive brokerage does.} Promoting brokers to the front of the degree ordering beats both
+$k$-coreness and cohesion in all eight networks ($\overline{\Delta R}=-0.049$, CI $[-0.086,-0.017]$,
+$r_{rb}=-1$), and beats or ties degree in six of eight ($\overline{\Delta R}=-0.020$, CI $[-0.047,0.000]$).
+The gains are concentrated where the group-level gap is large: relative to degree, brokerage lowers $R$
+by $24\%$ on Facebook and $33\%$ on Yeast, and relative to $k$-coreness by $33$--$44\%$ on Facebook,
+GrQc and Yeast; on Email-EU and \emph{C.~elegans}, which have no brokers, it reduces to degree. Across
+networks, the advantage of brokerage over $k$-coreness tracks the group disagreement $1-J_G$
+($\rho_s=0.88$, $p=0.004$), and so does its advantage over degree ($\rho_s=0.75$, $p=0.03$), whereas the
+latter is unrelated to size ($\rho_s=0.08$). Brokerage is not a universal winner: betweenness, which
+measures brokerage along shortest paths, remains the strongest static ordering on GrQc, Email-EU,
+Facebook and Yeast, and an adaptive degree attack is stronger than brokerage in six of eight networks.
+Among static orderings, brokerage's mean rank ($2.44$) is comparable to BE ($2.25$), betweenness
+($2.75$) and degree ($2.81$), and far ahead of $k$-coreness ($5.56$) and cohesion ($5.81$); unlike
+betweenness it requires no shortest-path computation once the cohesion hierarchy is known. With eight networks and Holm correction over twelve comparisons, no adjusted $p$-value falls
+below $0.094$ (the minimum attainable is $\approx0.09$); the conclusions rest on the consistent direction
+and the effect sizes.
+
+\begin{table*}[t]
+\centering
+\caption{Robustness index $R$ (lower is better) for each static ordering; ties broken by degree. Bold:
+best static ordering; Deg.$^\dagger$: adaptive degree attack, underlined where it beats every static
+ordering. Bottom row: mean rank among the seven static orderings.}
+\label{tab:rob}
+\input{tables/tab_robustness.tex}
+\end{table*}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig5_robustness_curves.pdf}
+\caption{Robustness curves $S(q)$ for all orderings (first half of the removal process).}
+\label{fig:curves}
+\end{figure*}
+
+\begin{table}[t]
+\centering
+\caption{Paired comparisons over the eight networks. $\overline{\Delta R}=\overline{R_A-R_B}$ (negative:
+A dismantles faster), bootstrap $95\%$ CI, wins/losses of A, Holm-adjusted exact Wilcoxon $p$ and
+rank-biserial $r_{rb}$; right: the same comparison when all ties are broken at random.}
+\label{tab:cmp}
+\input{tables/tab_comparisons.tex}
+\end{table}
+
+\textbf{Brokerage is more than articulation.} Table~\ref{tab:abl} restricts brokerage to $k=2$
+(articulation points shared by $2$-components) or to $k\ge3$, and compares it with all articulation
+points. Classical articulation points help in some networks but are harmful in the power grid
+($R=0.113$ versus $0.063$ for degree), where most of them only cut off small tree-like branches. On
+Facebook the entire gain comes from higher-order brokers ($k\ge3$: $R=0.224$ versus $0.283$ for both
+articulation variants), and on Yeast only the full hierarchy achieves the best result ($0.185$). The
+multi-level cohesion hierarchy, not just biconnectivity, carries the signal.
+
+\begin{table}[t]
+\centering
+\caption{Brokerage ablation: number of nodes flagged and $R$ when they are removed first (then by
+degree): all articulation points, brokers at $k=2$ only, at $k\ge3$ only, and at all levels ($b$).}
+\label{tab:abl}
+\input{tables/tab_ablation.tex}
+\end{table}
+
+\textbf{Sensitivity to tie-breaking.} When ties are broken uniformly at random
+(Table~\ref{tab:cmp}, right; Fig.~\ref{fig:rel}b), every coarse score deteriorates, and brokerage most
+of all, since $86$--$100\%$ of nodes share the value $b=0$. Brokerage is thus a sparse
+\emph{prioritisation layer}: it tells which nodes to remove first, and must be combined with a base
+ranking for the rest. Coreness and cohesion likewise depend on their tie-breaker: their advantage over
+random removal shrinks in every network (e.g.\ in the power grid from $0.129$ to $0.055$ for
+coreness), which underlines that tie-breaking rules must be reported in robustness studies.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.92\textwidth]{fig6_robustness_relative.pdf}
+\caption{Robustness relative to random removal, with ties broken (a) by degree and (b) uniformly at
+random.}
+\label{fig:rel}
+\end{figure*}
+
+\subsection{RQ3: Does a hybrid help?}
+Neither hybrid improves on its better component on held-out networks (Table~\ref{tab:hyb},
+Fig.~\ref{fig:hyb}). For core$+$cohesion the two inputs are nearly the same ranking; intermediate
+weights mix two degree tie-breaks and are slightly worse ($\approx1\%$) than either extreme, the selected
+$\lambda^*$ flips between $0$ and $1$ across folds, and the held-out hybrid never wins (H3 not supported).
+For core$+$brokerage the training folds always select $\lambda^*=0$, i.e.\ pure brokerage: adding
+coreness to brokerage only hurts (Fig.~\ref{fig:hyb}b), so the best ``hybrid'' is brokerage itself,
+which matches the conclusion of RQ2.
+
+\begin{table}[t]
+\centering
+\caption{Held-out evaluation of the hybrids. $\lambda^*$: selected weights; mean $R$ of the hybrid, of
+$k$-coreness and of the partner score $x\in\{\coh,b\}$ over the test networks; wins/losses against the
+better single score.}
+\label{tab:hyb}
+\input{tables/tab_hybrid.tex}
+\end{table}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig7_hybrid.pdf}
+\caption{(a, b) Robustness of the hybrids as a function of $\lambda$, relative to $k$-coreness (grey:
+individual networks; coloured: training-fold means). (c) Leave-one-network-out evaluation of the
+core$+$brokerage hybrid.}
+\label{fig:hyb}
+\end{figure*}
+
+\subsection{Computation}
+Table~\ref{tab:bench} compares our exact algorithm with NetworkX. Thanks to the certificates of
+Lemma~\ref{lem:cert}, only a small fraction of node pairs require a max-flow computation, and the full
+$k$-component hierarchy of the largest network, Facebook ($k_{\max}=115$), is computed in about
+$83$\,s on a laptop.
+
+\begin{table}[t]
+\centering
+\caption{Runtime of the exact $k$-component computation (ours) and of \texttt{networkx.k\_components}
+(time limit $30$\,min), number of levels $k$ at which the outputs differ, and number of NetworkX
+components that are strictly contained in one of ours (i.e.\ not maximal).}
+\label{tab:bench}
+\input{tables/tab_bench.tex}
+\end{table}
 
 %% ============================================================== DISCUSSION
 \section{Discussion and Limitations}
-%DISCUSSION%
+\label{sec:discussion}
+\textbf{Two notions, one ranking, two organisations.} Proposition~\ref{prop:le} guarantees
+$\coh_v\le\cn_v$, and our data show that the inequality is almost always tight: real $k$-cores are
+almost $k$-cohesive \emph{node by node}. The density view and the connectivity view therefore rank nodes
+nearly identically, and for tasks that only need a ranking---for example choosing seeds or computing a
+centrality---the linear-time $k$-core is an excellent proxy for the far more expensive cohesion
+level. The two views part ways at the level of \emph{groups}. In clustered, assortative networks (GrQc,
+Facebook, Yeast) and in the sparse power grid, $k$-cores are federations of cohesive groups joined
+through a few shared nodes; in Email-EU and \emph{C.~elegans}, which are dense and well mixed, they are
+not. This matches the intuition behind ``core-like groups''~\cite{liu2015core} and structural
+holes~\cite{burt1992structural}: density aggregates groups that connectivity keeps apart. It also explains why
+the CP models agree less with cohesion: they are tuned to a single dense core, while the cohesion
+hierarchy is inherently plural.
 
-%% ============================================================== CONCLUSION
+\textbf{Implications.} Analysts who use $k$-cores to describe ``the core'' of a network should check whether
+it is cohesive; a $k$-core with $F\gg1$ is better described as a set of overlapping cohesive groups. For
+robustness and vulnerability analyses, the useful output of the cohesion hierarchy is not a node's level
+but its \emph{multiplicity}: brokers that sit in several $k$-components at once are where the hierarchy
+can be cut. Cohesive brokerage is parameter-free, reuses the decomposition, and was best on the networks
+where the group-level gap is large---a property that can be measured in advance.
+
+\textbf{Limitations.} (i) Eight networks support statements about our sample, not about networks in
+general; all comparisons are reported with effect sizes, and none survives multiple-testing correction at
+$\alpha=0.05$ given the minimum attainable $p$. (ii) All networks were reduced to simple, undirected,
+unweighted largest components; weighted or directed cohesion may behave differently. (iii) We study
+static orderings and the robustness index $R$; adaptive or optimal-percolation
+attacks~\cite{morone2015influence} are stronger, and other functional criteria (spreading, synchronisation)
+may rank the notions differently. Adaptive degree, our strongest baseline, beats brokerage in six
+networks, and an adaptive variant of brokerage (recomputing the hierarchy after removals) is a natural
+next step. (iv) For tractability, Rombach's method used a $6\times9$ grid instead of $100\times100$, and BE
+was optimised greedily from 20 random visiting orders, so both fits may be slightly sub-optimal and the
+corresponding results are conservative for these methods. (v) Our null model preserves degrees but not clustering; a clustering-preserving null
+model would test whether the group-level gap exceeds what triangles alone imply. (vi) Exact cohesion
+remains costly: networks of a few thousand nodes take seconds to minutes, but very large networks would
+require approximation or parallelisation.
+
 \section{Conclusion}
-%CONCLUSION%
+Core--periphery cores and structural-cohesion cores agree on who is central but not on how the centre is
+organised. Across eight networks, $k$-coreness and cohesion level are practically the same ranking, so
+cohesion levels neither change the identified core nor improve targeted attacks, and hybrids of the two
+do not help. The disagreement lives at the group level: in half of the networks one connected $k$-core
+is a federation of several overlapping cohesive groups, a feature that is absent from degree-preserving
+randomisations. The nodes that hold these federations together, the cohesive brokers, are critical:
+removing them first dismantles the networks markedly faster than coreness, and the gain grows with the size
+of the group-level gap. We hope that these results, the exact algorithm and the released code help
+analysts decide when a dense core is also a cohesive one.
 
 \section*{Reproducibility}
 All code, the exact data-cleaning steps, fixed random seeds and the scripts that produce every
